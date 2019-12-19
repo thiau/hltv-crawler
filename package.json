@@ -1,0 +1,23 @@
+{
+  "name": "hltv-crawler",
+  "version": "1.0.0",
+  "description": "Unofficial HLTV Crawler",
+  "main": "app.js",
+  "dependencies": {
+    "hltv": "^2.17.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thiau/hltv-crawler.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thiau/hltv-crawler/issues"
+  },
+  "homepage": "https://github.com/thiau/hltv-crawler#readme"
+}
