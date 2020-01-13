@@ -7,7 +7,6 @@
 			"teamId": teamId,
 			"hltvPages": hltvPages,
 			"getMatchResults": function () {
-				console.log("Getting Match Results")
 				return new Promise((resolve, reject) => {
 					HLTV.getResults({
 						"pages": this.hltvPages,
@@ -34,7 +33,6 @@
 				})
 			},
 			"getMapStats": function () {
-				console.log("Getting Match Stats")
 				return new Promise((resolve, reject) => {
 					HLTV.getTeamStats({ "id": this.teamId }).then(data => {
 						resolve(data.mapStats);
