@@ -6,7 +6,7 @@
 
 	let hltvCrawler = HltvCrawler({
 		"teamId": 9215,
-		"hltvPages": 2
+		"hltvPages": 3
 	});
 
 	(async () => {
@@ -16,13 +16,14 @@
 			let date = new Date().toLocaleString().split(",")[0].split("/").join("_");
 
 			// Async methods
+			console.log(":: Getting Match Results and Map Stats");
 			let [matchResults, mapStats] = await Promise.all([hltvCrawler.getMatchResults(), hltvCrawler.getMapStats()]);
 
 			// Temp strategy to reduce result size
 			// matchResults = matchResults.slice(0, 20);
 
 			// Transform Team Name to only keep names
-			console.log("Transforming Team Name")
+			console.log(":: Transforming Team Name");
 			matchResults = matchResults.map(match => hltvCrawler.transformTeamName(match));
 
 			// Get initial match details
@@ -32,7 +33,7 @@
 			matchDetails = matchDetails.filter((item) => Object.keys(item).length);
 
 			// Regular methods
-			console.log("Getting all features");
+			console.log("\n:: Getting all features");
 			let matchResultsDF = new DataFrame(matchResults);
 			let matchMapsWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getMatchMapsWinRate(mapStats, match)));
 			let matchHeadToHeadWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getHeadToHeadWinRate(match)));
@@ -41,7 +42,7 @@
 			let matchEventTypes = new DataFrame(matchResults.map(match => hltvCrawler.getEventType(match)));
 
 			// Join DataFrames
-			console.log("Joining dataframes of features");
+			console.log(":: Joining dataframes of features");
 			let matchInfo = matchResultsDF.merge(
 				matchMapsWinRate, ["id"], "inner").merge(
 					matchPlayoffsType, ["id"], "inner").merge(
@@ -50,19 +51,19 @@
 								matchHeadToHeadWinRate, ["id"], "inner");
 
 			// Columns to keep in the final dataset
-			let columns = ["id", "team2", "format", "isPlayoffs", "isFinal", "eventName", "matchMapWinRate", "eventType", "headToHeadWinRate", "victory"]
+			let columns = ["id", "team2", "format", "isPlayoffs", "isFinal", "eventName", "matchMapWinRate", "eventType", "headToHeadWinRate", "victory"];
 
 			// Generate final JSON Object
-			console.log("Generating final JSON");
-			let matchesObject = matchInfo.get(columns).to_json({ "orient": "records" })
-
-			// Get total matches
-			console.log(`Total of ${matchInfo.length} matches analyzed`);
-			console.log(`Total of ${matchResults.length - matchInfo.length} matches with errors`)
+			console.log(":: Generating final JSON");
+			let matchesObject = matchInfo.get(columns).to_json({ "orient": "records" });
 
 			// Save final JSON Object to CSV
-			console.log("Saving to JSON");
+			console.log(":: Saving to JSON");
 			csvHelper.writeJsonToCsv(matchesObject, `matches_${matchResults[0].team1}_${date}`);
+
+			// Get total matches
+			console.log(`\n:: Matches Analyzed: ${matchInfo.length}`);
+			console.log(`:: Matches with erros: ${matchResults.length - matchInfo.length}`);
 		} catch (e) {
 			console.log(e);
 		}
