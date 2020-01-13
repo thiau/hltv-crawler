@@ -43,7 +43,7 @@
 					})
 				});
 			},
-			"getMatchMapsWinRate": function (mapStats, matchDetails) {
+			"getMatchMapsWinRateOld": function (mapStats, matchDetails) {
 				console.log("Getting Overal Map Win Rate");
 				return new Promise((resolve, reject) => {
 					try {
@@ -54,7 +54,7 @@
 							let losses = maps.map(gameMap => mapStats[gameMap].losses).reduce((a, b) => a + b);
 							let matchMapWinRate = Math.round((wins / (wins + losses)) * 100) / 100
 							matchMapWinRates.push({
-								"matchId": match.id,
+								"id": match.id,
 								"maps": maps,
 								"matchMapWinRate": matchMapWinRate
 							});
@@ -65,15 +65,27 @@
 					}
 				});
 			},
-			"getMatchMapsWinRate2": function (mapStats, match) {
+			"getHeadToHeadWinRate": function (match) {
+				// Default win rate is .5 of winning
+
+				let topHeadToHead = match.headToHead.length > 10 ? match.headToHead.slice(0, 10) : match.headToHead;
+				let winners = topHeadToHead.filter(match => match.winner).map(match => match.winner.id);
+				let teamWins = winners.filter(winner => winner == teamId);
+				let winRate = Math.round((teamWins.length / topHeadToHead.length) * 10) / 10;
+				return {
+					"id": match.id,
+					"headToHeadWinRate": winRate || .5
+				}
+			},
+			"getMatchMapsWinRate": function (mapStats, match) {
 				let matchMapWinRates = [];
 				let maps = match.maps.map(gameMap => gameMap.name);
-				let wins = maps.map(gameMap => mapStats[gameMap].wins).reduce((a, b) => a + b);
-				let losses = maps.map(gameMap => mapStats[gameMap].losses).reduce((a, b) => a + b);
+				let wins = maps.map(gameMap => mapStats[gameMap] ? mapStats[gameMap].wins : 0).reduce((a, b) => a + b);
+				let losses = maps.map(gameMap => mapStats[gameMap] ? mapStats[gameMap].losses : 0).reduce((a, b) => a + b);
 				let matchMapWinRate = Math.round((wins / (wins + losses)) * 100) / 100
 				return {
-					"matchId": match.id,
-					"maps": maps,
+					"id": match.id,
+					"matchMaps": maps,
 					"matchMapWinRate": matchMapWinRate
 				};
 			},
@@ -91,7 +103,7 @@
 				}
 
 				return {
-					"matchId": match.id,
+					"id": match.id,
 					"eventName": match.event.name,
 					"eventType": eventType
 				}
@@ -115,7 +127,7 @@
 				}
 
 				return {
-					"matchId": match.id,
+					"id": match.id,
 					"isPlayoffs": is_playoffs,
 					"isFinal": is_final
 				};
@@ -123,9 +135,18 @@
 			"getMatchWin": function (match) {
 				let result = match.result.split(" - ");
 				return {
-					"matchId": match.id,
+					"id": match.id,
 					"victory": parseInt(result[0]) > parseInt(result[1]) ? 1 : 0
 				}
+			},
+			"transformTeamName": function (match) {
+				let _match = { ...match }
+				let teamName1 = _match.team1.name;
+				let teamName2 = _match.team2.name;
+				_match.team1 = teamName1;
+				_match.team2 = teamName2;
+
+				return _match;
 			}
 		}
 	}
