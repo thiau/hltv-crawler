@@ -27,7 +27,9 @@
 						console.log(`${data.team1.name} vs ${data.team2.name} - ${data.event.name}`);
 						resolve(data);
 					}).catch(err => {
-						reject(err)
+						console.log(`Error on processing ${match_id}`)
+						console.log(err);
+						resolve({});
 					});
 				})
 			},
