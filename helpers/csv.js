@@ -5,15 +5,28 @@
 
 	module.exports = function () {
 		return {
-			"writeJsonToCsv": function (data, fileName) {
-				let dataStringfied = JSON.stringify(data);
+			"writeJson": function (data, fileName) {
+				return new Promise((resolve, reject) => {
+					let dataStringfied = JSON.stringify(data);
 
-				fs.writeFile(`./datasets/${fileName}.json`, dataStringfied, (err) => {
-					if (err) {
-						console.log(err);
-					} else {
-						console.log("Successfully Written to File.");
-					}
+					fs.writeFile(`./datasets/${fileName}.json`, dataStringfied, (err) => {
+						if (err) {
+							reject(err);
+						} else {
+							resolve("Successfully Written to File.");
+						}
+					});
+				});
+			},
+			"writeCsv": function (data, fileName) {
+				return new Promise((resolve, reject) => {
+					fs.writeFile(`./datasets/${fileName}.csv`, data, (err) => {
+						if (err) {
+							reject(err);
+						} else {
+							resolve("Successfully Written to File.");
+						}
+					});
 				});
 			}
 		}
