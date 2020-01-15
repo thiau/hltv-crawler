@@ -1,29 +1,45 @@
 (function () {
 	"use strict";
+
 	let HltvCrawler = require("./helpers/crawler");
 	let DataFrame = require('pandas-js').DataFrame;
-	let csvHelper = require("./helpers/csv")();
+	let fileHelper = require("./helpers/csv")();
+	const chalk = require('chalk');
+
+	const args = process.argv;
+
+	// @TODO: Improve: Find parameters by name, not position
+	let teamID = args[2].split("=")[1];
+	let pages = args[3].split("=")[1] || 1;
 
 	let hltvCrawler = HltvCrawler({
-		"teamId": 9215,
-		"hltvPages": 3
+		"teamId": teamID,
+		"hltvPages": pages
 	});
 
 	(async () => {
+		let teamName = await hltvCrawler.getTeamName();
+
+		console.log(chalk.blue("\n:::::::: Starting HLTV Crawler ::::::::\n"));
+		console.log(`Team: ${chalk.green(teamName)}`);
+		console.log(`Pages to crawl: ${chalk.green(pages)}\n`);
+		console.log(chalk.blue("::::::::::::::::::::::::::::::::::::::::\n"));
+
+
 		try {
 			// Get current date
 			// let date = new Date().toLocaleString().split(" ")[0].split("-").join("_");
 			let date = new Date().toLocaleString().split(",")[0].split("/").join("_");
 
 			// Async methods
-			console.log(":: Getting Match Results and Map Stats");
+			console.log(chalk.yellow("Step: ") + chalk.blue("Getting Match Results and Map Stats"));
 			let [matchResults, mapStats] = await Promise.all([hltvCrawler.getMatchResults(), hltvCrawler.getMapStats()]);
 
 			// Temp strategy to reduce result size
-			// matchResults = matchResults.slice(0, 20);
+			matchResults = matchResults.slice(0, 20);
 
 			// Transform Team Name to only keep names
-			console.log(":: Transforming Team Name");
+			console.log(chalk.yellow("Step: ") + chalk.blue("Transforming Team Name\n"));
 			matchResults = matchResults.map(match => hltvCrawler.transformTeamName(match));
 
 			// Get initial match details
@@ -33,7 +49,7 @@
 			matchDetails = matchDetails.filter((item) => Object.keys(item).length);
 
 			// Regular methods
-			console.log("\n:: Getting all features");
+			console.log(chalk.yellow("\nStep: ") + chalk.blue("Getting all features"));
 			let matchResultsDF = new DataFrame(matchResults);
 			let matchMapsWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getMatchMapsWinRate(mapStats, match)));
 			let matchHeadToHeadWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getHeadToHeadWinRate(match)));
@@ -42,7 +58,7 @@
 			let matchEventTypes = new DataFrame(matchResults.map(match => hltvCrawler.getEventType(match)));
 
 			// Join DataFrames
-			console.log(":: Joining dataframes of features");
+			console.log(chalk.yellow("Step: ") + chalk.blue("Joining dataframes of features"));
 			let matchInfo = matchResultsDF.merge(
 				matchMapsWinRate, ["id"], "inner").merge(
 					matchPlayoffsType, ["id"], "inner").merge(
@@ -54,16 +70,26 @@
 			let columns = ["id", "team2", "format", "isPlayoffs", "isFinal", "eventName", "matchMapWinRate", "eventType", "headToHeadWinRate", "victory"];
 
 			// Generate final JSON Object
-			console.log(":: Generating final JSON");
+			console.log(chalk.yellow("Step: ") + chalk.blue("Generating final JSON"));
 			let matchesObject = matchInfo.get(columns).to_json({ "orient": "records" });
 
-			// Save final JSON Object to CSV
-			console.log(":: Saving to JSON");
-			csvHelper.writeJsonToCsv(matchesObject, `matches_${matchResults[0].team1}_${date}`);
+			// Generate final CSV
+			console.log(chalk.yellow("Step: ") + chalk.blue("Generating final CSV"));
+			let csvFile = matchInfo.get(columns).to_csv();
 
-			// Get total matches
-			console.log(`\n:: Matches Analyzed: ${matchInfo.length}`);
-			console.log(`:: Matches with erros: ${matchResults.length - matchInfo.length}`);
+			// Save final JSON Object to file
+			console.log(chalk.yellow("Step: ") + chalk.blue("Saving to JSON"));
+			await fileHelper.writeJson(matchesObject, `matches_${teamName}_${date}`);
+
+			// Save final CSV Object to file
+			console.log(chalk.yellow("Step: ") + chalk.blue("Saving to CSV"));
+			await fileHelper.writeCsv(csvFile, `matches_${teamName}_${date}`);
+
+			// Summary
+			console.log(chalk.blue("\n::::::::::::::: Summary ::::::::::::::\n"));
+			console.log(`${chalk.yellow("Matches Analyzed:")} ${chalk.blue(matchInfo.length)}`);
+			console.log(`${chalk.yellow("Matches with erros:")} ${chalk.blue(matchResults.length - matchInfo.length)}`);
+			console.log(chalk.blue("\n::::::::::::::::::::::::::::::::::::::::\n"));
 		} catch (e) {
 			console.log(e);
 		}
