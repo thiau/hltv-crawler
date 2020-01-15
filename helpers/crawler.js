@@ -7,6 +7,17 @@
 		return {
 			"teamId": teamId,
 			"hltvPages": hltvPages,
+			"getTeamName": function () {
+				return new Promise((resolve, reject) => {
+					HLTV.getTeam({
+						"id": this.teamId
+					}).then(data => {
+						resolve(data.name);
+					}).catch(err => {
+						reject(err);
+					});
+				})
+			},
 			"getMatchResults": function () {
 				return new Promise((resolve, reject) => {
 					HLTV.getResults({
@@ -17,7 +28,7 @@
 					}).catch(err => {
 						reject(err);
 					});
-				})
+				});
 			},
 			"getMatchDetails": function (match_id) {
 				return new Promise((resolve, reject) => {
