@@ -1,6 +1,7 @@
 (function () {
 	"use strict";
 	const { HLTV } = require('hltv');
+	const chalk = require('chalk');
 
 	module.exports = function ({ teamId, hltvPages = 4 }) {
 		return {
@@ -22,8 +23,8 @@
 				return new Promise((resolve, reject) => {
 					HLTV.getMatch({ "id": match_id }).then(data => {
 						console.log("-----------------------");
-						console.log(`Gettting Info for Match ${match_id}`);
-						console.log(`${data.team1.name} vs ${data.team2.name} - ${data.event.name}`);
+						console.log(`Match: ${chalk.yellow(match_id)}`);
+						console.log(`${chalk.green(data.team1.name)} ${chalk.green('vs')} ${chalk.green(data.team1.name)} - ${chalk.blue(data.event.name)}`);
 						resolve(data);
 					}).catch(err => {
 						console.log(`Error on processing ${match_id}`)
