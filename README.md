@@ -1,2 +1,2 @@
-# hltv-crawler
-Unofficial HLTV Crawler
+# HTLV Crawler
+Unofficial HLTV Crawler - Generates features to predict match results
