@@ -89,7 +89,7 @@
 			console.log(chalk.blue("\n::::::::::::::: Summary ::::::::::::::\n"));
 			console.log(`${chalk.yellow("Matches Analyzed:")} ${chalk.blue(matchInfo.length)}`);
 			console.log(`${chalk.yellow("Matches with erros:")} ${chalk.blue(matchResults.length - matchInfo.length)}`);
-			console.log(chalk.blue("\n::::::::::::::::::::::::::::::::::::::::\n"));
+			console.log(chalk.blue("\n::::::::::::::::::::::::::::::::::::::\n"));
 		} catch (e) {
 			console.log(e);
 		}
