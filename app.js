@@ -36,14 +36,18 @@
 			let [matchResults, mapStats] = await Promise.all([hltvCrawler.getMatchResults(), hltvCrawler.getMapStats()]);
 
 			// Temp strategy to reduce result size
-			matchResults = matchResults.slice(0, 20);
+			// matchResults = matchResults.slice(0, 20);
 
 			// Transform Team Name to only keep names
 			console.log(chalk.yellow("Step: ") + chalk.blue("Transforming Team Name\n"));
 			matchResults = matchResults.map(match => hltvCrawler.transformTeamName(match));
 
 			// Get initial match details
-			let matchDetails = await Promise.all(matchResults.map(match => hltvCrawler.getMatchDetails(match.id)));
+			let matchDetails = [];
+			for (let i in matchResults) {
+				let matchDetail = await hltvCrawler.getMatchDetails(matchResults[i].id);
+				matchDetails.push(matchDetail);
+			}
 
 			// Remove all matches with errors
 			matchDetails = matchDetails.filter((item) => Object.keys(item).length);
