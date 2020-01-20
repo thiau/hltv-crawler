@@ -35,7 +35,7 @@
 					HLTV.getMatch({ "id": match_id }).then(data => {
 						console.log("-----------------------");
 						console.log(`Match: ${chalk.yellow(match_id)}`);
-						console.log(`${chalk.green(data.team1.name)} ${chalk.green('vs')} ${chalk.green(data.team1.name)} - ${chalk.blue(data.event.name)}`);
+						console.log(`${chalk.green(data.team1.name)} ${chalk.green('vs')} ${chalk.green(data.team2.name)} - ${chalk.blue(data.event.name)}`);
 						resolve(data);
 					}).catch(err => {
 						console.log(`Error on processing ${match_id}`)
