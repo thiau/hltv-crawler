@@ -36,7 +36,7 @@
 			let [matchResults, mapStats] = await Promise.all([hltvCrawler.getMatchResults(), hltvCrawler.getMapStats()]);
 
 			// Temp strategy to reduce result size
-			// matchResults = matchResults.slice(0, 20);
+			// matchResults = matchResults.slice(0, 15);
 
 			// Transform Team Name to only keep names
 			console.log(chalk.yellow("Step: ") + chalk.blue("Transforming Team Name\n"));
@@ -44,9 +44,13 @@
 
 			// Get initial match details
 			let matchDetails = [];
+			let matchRanking = [];
 			for (let i in matchResults) {
 				let matchDetail = await hltvCrawler.getMatchDetails(matchResults[i].id);
 				matchDetails.push(matchDetail);
+
+				let matchRankingByMatch = await hltvCrawler.getRankingFromDate(matchResults[i]);
+				matchRanking.push(matchRankingByMatch);
 			}
 
 			// Remove all matches with errors
@@ -55,6 +59,7 @@
 			// Regular methods
 			console.log(chalk.yellow("\nStep: ") + chalk.blue("Getting all features"));
 			let matchResultsDF = new DataFrame(matchResults);
+			let matchRankingDF = new DataFrame(matchRanking);
 			let matchMapsWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getMatchMapsWinRate(mapStats, match)));
 			let matchHeadToHeadWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getHeadToHeadWinRate(match)));
 			let matchPlayoffsType = new DataFrame(matchDetails.map(match => hltvCrawler.getPlayoffType(match)));
@@ -68,10 +73,11 @@
 					matchPlayoffsType, ["id"], "inner").merge(
 						matchWin, ["id"], "inner").merge(
 							matchEventTypes, ["id"], "inner").merge(
-								matchHeadToHeadWinRate, ["id"], "inner");
+								matchHeadToHeadWinRate, ["id"], "inner").merge(
+									matchRankingDF, ["id"], "inner");
 
 			// Columns to keep in the final dataset
-			let columns = ["id", "team2", "format", "isPlayoffs", "isFinal", "eventName", "matchMapWinRate", "eventType", "headToHeadWinRate", "victory"];
+			let columns = ["id", "team2", "currentRank", "format", "isPlayoffs", "isFinal", "eventName", "matchMapWinRate", "eventType", "headToHeadWinRate", "victory"];
 
 			// Generate final JSON Object
 			console.log(chalk.yellow("Step: ") + chalk.blue("Generating final JSON"));

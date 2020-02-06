@@ -157,6 +157,30 @@
 				_match.team2 = teamName2;
 
 				return _match;
+			},
+			"getSplittedDate": function (date) {
+				return {
+					"day": moment(date).date(),
+					"month": moment(date).format('MMMM').toLowerCase(),
+					"year": moment(date).year()
+				}
+			},
+			"getRankingFromDate": function (match) {
+				return new Promise((resolve, reject) => {
+					let matchDate = new Date(match.date);
+					let lastMondayFromDate = moment(matchDate).startOf('isoWeek').toDate();
+					let split = this.getSplittedDate(lastMondayFromDate);
+
+					HLTV.getTeamRanking({ year: split.year, month: split.month, day: split.day }).then((data) => {
+						resolve({
+							"id": match.id,
+							"matchDate": matchDate,
+							"currentRank": data.find(rank => rank.team.name == "MIBR").place
+						});
+					}).catch(err => {
+						reject(err);
+					});
+				});
 			}
 		}
 	}
