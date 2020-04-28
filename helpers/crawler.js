@@ -53,6 +53,19 @@
 					})
 				});
 			},
+			"getTeamStats": function () {
+				return new Promise((resolve, reject) => {
+					HLTV.getTeamStats({ "id": this.teamId }).then((data) => {
+						resolve({
+							"id": this.teamId,
+							"kdRatio": data.overview.kdRatio,
+							"matchWinRate": Math.round((data.overview.wins / data.overview.mapsPlayed) * 100) / 100
+						});
+					}).catch(err => {
+						reject(err);
+					});
+				});
+			},
 			"getMatchMapsWinRateOld": function (mapStats, matchDetails) {
 				console.log("Getting Overal Map Win Rate");
 				return new Promise((resolve, reject) => {
