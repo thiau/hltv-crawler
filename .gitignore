@@ -106,3 +106,5 @@ dist
 old_files
 notebook
 datasets
+exported_datasets
+.ipynb_checkpoints
