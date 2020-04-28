@@ -47,10 +47,28 @@
 			// Get initial match details
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Getting Match Details\n"));
 			let matchDetails = [];
+			let matchDetails_bo1 = [];
+			let matchDetails_bo3 = [];
 			for (let i in matchResults) {
 				let matchDetail = await hltvCrawler.getMatchDetails(matchResults[i].id);
 				matchDetails.push(matchDetail);
+
+				// New
+				if (matchResults[i].id.format == "bo1") {
+					matchDetails_bo1.push(matchDetail);
+				} else if (matchResults[i].id.format == "bo3") {
+					matchDetails_bo3.push(matchDetail);
+				}
+
 			}
+
+			// Split bo3 into bo1s
+
+			matchDetails_bo3.forEach(match => {
+				// pegar o mapa e quem ganhou cada mapa
+				// let maps = match.maps.map(gameMap => gameMap.name);
+			})
+			// console.log(matchDetails_bo3)
 
 			// Remove all matches with errors
 			matchDetails = matchDetails.filter((item) => Object.keys(item).length);
@@ -73,15 +91,6 @@
 			let matchPlayoffsType = new DataFrame(matchDetails.map(match => hltvCrawler.getPlayoffType(match)));
 			let matchWin = new DataFrame(matchResults.map(match => hltvCrawler.getMatchWin(match)));
 			let matchEventTypes = new DataFrame(matchResults.map(match => hltvCrawler.getEventType(match)));
-
-
-			// // Only get Bo1
-			// let teste = matchResults.filter(match => match.format == 'bo1')
-
-			// // Only get not bo1
-			// let teste2 = matchResults.filter(match => match.format !== 'bo1')
-			// console.log(teste2[1])
-
 
 			// Join DataFrames
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Joining dataframes of features"));
