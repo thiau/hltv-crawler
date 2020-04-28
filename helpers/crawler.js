@@ -30,6 +30,13 @@
 					});
 				});
 			},
+			"getCommunityOdds": function (match, teamName) {
+				console.log(match);
+				return {
+					"id": match.id,
+					"oddsTeamOne": match.team1 == teamName ? match.oddsCommunity.team1 : match.oddsCommunity.team2
+				}
+			},
 			"getMatchDetails": function (match_id) {
 				return new Promise((resolve, reject) => {
 					setTimeout(() => {
