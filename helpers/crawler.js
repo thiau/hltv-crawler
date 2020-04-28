@@ -2,6 +2,7 @@
 	"use strict";
 	const { HLTV } = require('hltv');
 	const chalk = require('chalk');
+	const moment = require('moment');
 
 	module.exports = function ({ teamId, hltvPages = 4 }) {
 		return {
@@ -110,6 +111,8 @@
 				}
 			},
 			"getMatchMapsWinRate": function (mapStats, match) {
+				// @TODO: Evaluate the possible usage of getTeamStats - mapStats
+
 				let matchMapWinRates = [];
 				let maps = match.maps.map(gameMap => gameMap.name);
 				let wins = maps.map(gameMap => mapStats[gameMap] ? mapStats[gameMap].wins : 0).reduce((a, b) => a + b);
