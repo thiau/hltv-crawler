@@ -38,7 +38,7 @@
 			console.log(chalk.green("INFO: ") + chalk.blue(`${matchResults.length} matches found\n`));
 
 			// Temp strategy to reduce result size
-			matchResults = matchResults.slice(0, 15);
+			matchResults = matchResults.slice(0, 3);
 
 			// Transform Team Name to only keep names
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Transforming Team Name\n"));
@@ -54,8 +54,8 @@
 
 				// decode vetoes
 				await (function () {
-					let picks_picked = matchDetail.vetoes.filter(pick => pick.type == "picked");
-					picks = picks_picked.map(veto => {
+					let all_picked = matchDetail.vetoes.filter(pick => pick.type == "picked");
+					picks = all_picked.map(veto => {
 						return {
 							"map": veto.map,
 							"picker": veto.team.name
@@ -85,25 +85,40 @@
 				})
 			})();
 
-			let newMatchResults = [];
+			function getSelectedAndOpositeTeam(match, teamName) {
+				let teams = {}
+				if (match.team1.name == teamName) {
+					teams.selected = match.team1
+					teams.oposite = match.team2
+				} else {
+					teams.selected = match.team2
+					teams.oposite = match.team1
+				}
+
+				return teams
+			}
+
+			// Split BO3 in BO1 and get results
+			console.log(chalk.yellow("STEP: ") + chalk.blue("Splitting BO3 in BO1 and get map result details\n"));
+			let bo1MatchResults = [];
 			for (let j in matchDetails) {
 				for (let i in matchDetails[j].maps) {
 					console.log(chalk.yellow("\nMatch ID: ") + chalk.blue(matchDetails[j].id));
-					console.log(chalk.yellow("\nMatch Stats ID: ") + chalk.blue(matchDetails[j].maps[i].statsId || "Not Played"));
+					console.log(chalk.yellow("Match Stats ID: ") + chalk.blue(matchDetails[j].maps[i].statsId || "Not Played"));
 
 					if (matchDetails[j].maps[i].statsId) {
 						let matchMapDetail = await hltvCrawler.getMatchMapStats(matchDetails[j].maps[i].statsId);
-						let pick_new = picks.find(pick => pick.map == matchMapDetail.map)
+						console.log(chalk.yellow("Match Map: ") + chalk.blue(matchMapDetail.map));
 
-						console.log(chalk.yellow("\nMatch Map: ") + chalk.blue(matchMapDetail.map));
+						let teams = getSelectedAndOpositeTeam(matchMapDetail, teamName);
+						let picked_map = picks.find(pick => pick.map == matchMapDetail.map)
 
-						newMatchResults.push({
+						bo1MatchResults.push({
 							"id": matchDetails[j].id,
-							"team1": matchDetails[j].team1.name,
-							"team2": matchDetails[j].team2.name,
-							"victory": matchMapDetail.team1.score > matchMapDetail.team2.score ? 1 : 0,
+							"oposite_team": teams.oposite.name,
+							"victory": teams.selected.score >teams.oposite.score ? 1 : 0,
 							"map": matchMapDetail.map,
-							"pick": pick_new ? (pick_new.picker == matchDetails[j].team1.name ? 1 : 0) : 2
+							"pick": picked_map ? (picked_map.picker == teams.selected.name ? 1 : 0) : 2
 						});
 					}
 				}
@@ -119,7 +134,10 @@
 			// console.log(chalk.yellow("\nSTEP: ") + chalk.blue("Getting all features"));
 			// let matchResultsDF = new DataFrame(matchResults);
 
-			let matchResultsDF = new DataFrame(newMatchResults);
+
+			// @TODO: Improve MatchMaap Win Rate just for Bo1s
+
+			let matchResultsDF = new DataFrame(bo1MatchResults);
 			let matchMapsWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getMatchMapsWinRate(mapStats, match)));
 			let matchHeadToHeadWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getHeadToHeadWinRate(match)));
 			//map pick
@@ -145,7 +163,7 @@
 
 			// // Columns to keep in the final dataset
 			// let columns = ["id", "team2", "format", "isPlayoffs", "isFinal", "eventName", "matchMapWinRate", "eventType", "headToHeadWinRate", "victory"];
-			let columns = ["id", "team1", "team2", "matchMapWinRate", "headToHeadWinRate", "map", "pick", "victory"];
+			let columns = ["id", "oposite_team", "matchMapWinRate", "headToHeadWinRate", "map", "pick", "victory"];
 
 			// Generate final JSON Object
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Generating final JSON"));
