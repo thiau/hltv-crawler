@@ -206,6 +206,17 @@
 						reject(err);
 					});
 				});
+			},
+			"getMatchMapStats": function (matchMapStatsId) {
+				return new Promise((resolve, reject) => {
+					setTimeout(() => {
+						HLTV.getMatchMapStats({ id: matchMapStatsId }).then((data) => {
+							resolve(data);
+						}).catch(err => {
+							reject(err);
+						});
+					}, 1000);
+				})
 			}
 		}
 	}

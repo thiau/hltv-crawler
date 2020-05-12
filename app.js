@@ -38,7 +38,7 @@
 			console.log(chalk.green("INFO: ") + chalk.blue(`${matchResults.length} matches found\n`));
 
 			// Temp strategy to reduce result size
-			// matchResults = matchResults.slice(0, 15);
+			matchResults = matchResults.slice(0, 15);
 
 			// Transform Team Name to only keep names
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Transforming Team Name\n"));
@@ -47,84 +47,127 @@
 			// Get initial match details
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Getting Match Details\n"));
 			let matchDetails = [];
-			let matchDetails_bo1 = [];
-			let matchDetails_bo3 = [];
+			let picks = [];
 			for (let i in matchResults) {
 				let matchDetail = await hltvCrawler.getMatchDetails(matchResults[i].id);
 				matchDetails.push(matchDetail);
 
-				// New
-				if (matchResults[i].id.format == "bo1") {
-					matchDetails_bo1.push(matchDetail);
-				} else if (matchResults[i].id.format == "bo3") {
-					matchDetails_bo3.push(matchDetail);
-				}
-
+				// decode vetoes
+				await (function () {
+					let picks_picked = matchDetail.vetoes.filter(pick => pick.type == "picked");
+					picks = picks_picked.map(veto => {
+						return {
+							"map": veto.map,
+							"picker": veto.team.name
+						}
+					})
+				}())
 			}
 
+
+			// // Save matchDetails in temp file
+			// console.log(chalk.yellow("STEP: ") + chalk.blue("Saving temp matchDetails JSON\n"));
+			// await fileHelper.writeJson(matchDetails, `matchDetails_${teamName}_${date}`);
+
+			// // Save mapStats in temp file
+			// console.log(chalk.yellow("STEP: ") + chalk.blue("Saving temp mapStats JSON\n"));
+			// await fileHelper.writeJson(mapStats, `mapStats_${teamName}_${date}`);
+
+			// New
 			// Split bo3 into bo1s
 
-			matchDetails_bo3.forEach(match => {
-				// pegar o mapa e quem ganhou cada mapa
-				// let maps = match.maps.map(gameMap => gameMap.name);
-			})
-			// console.log(matchDetails_bo3)
+			console.log(chalk.yellow("\nSTEP: ") + chalk.blue("Waiting 8 Seconds Before proceed\n"));
+			await (() => {
+				return new Promise((resolve, reject) => {
+					setTimeout(() => {
+						resolve();
+					}, 10000)
+				})
+			})();
 
-			// Remove all matches with errors
-			matchDetails = matchDetails.filter((item) => Object.keys(item).length);
+			let newMatchResults = [];
+			for (let j in matchDetails) {
+				for (let i in matchDetails[j].maps) {
+					console.log(chalk.yellow("\nMatch ID: ") + chalk.blue(matchDetails[j].id));
+					console.log(chalk.yellow("\nMatch Stats ID: ") + chalk.blue(matchDetails[j].maps[i].statsId || "Not Played"));
 
-			console.log(chalk.green("\nINFO: ") + chalk.blue(`${matchDetails.length} matches after cleanup\n`));
+					if (matchDetails[j].maps[i].statsId) {
+						let matchMapDetail = await hltvCrawler.getMatchMapStats(matchDetails[j].maps[i].statsId);
+						let pick_new = picks.find(pick => pick.map == matchMapDetail.map)
 
-			// Save matchDetails in temp file
-			console.log(chalk.yellow("STEP: ") + chalk.blue("Saving temp matchDetails JSON\n"));
-			await fileHelper.writeJson(matchDetails, `matchDetails_${teamName}_${date}`);
+						console.log(chalk.yellow("\nMatch Map: ") + chalk.blue(matchMapDetail.map));
 
-			// Save mapStats in temp file
-			console.log(chalk.yellow("STEP: ") + chalk.blue("Saving temp mapStats JSON\n"));
-			await fileHelper.writeJson(mapStats, `mapStats_${teamName}_${date}`);
+						newMatchResults.push({
+							"id": matchDetails[j].id,
+							"team1": matchDetails[j].team1.name,
+							"team2": matchDetails[j].team2.name,
+							"victory": matchMapDetail.team1.score > matchMapDetail.team2.score ? 1 : 0,
+							"map": matchMapDetail.map,
+							"pick": pick_new ? (pick_new.picker == matchDetails[j].team1.name ? 1 : 0) : 2
+						});
+					}
+				}
+			};
+
+			// @TODO: Apply to matchDetails_bo3 and matchDetails_bo1
+			// // Remove all matches with errors
+			// matchDetails = matchDetails.filter((item) => Object.keys(item).length);
+
+			// console.log(chalk.green("\nINFO: ") + chalk.blue(`${matchDetails.length} matches after cleanup\n`));
 
 			// Regular methods
-			console.log(chalk.yellow("\nSTEP: ") + chalk.blue("Getting all features"));
-			let matchResultsDF = new DataFrame(matchResults);
+			// console.log(chalk.yellow("\nSTEP: ") + chalk.blue("Getting all features"));
+			// let matchResultsDF = new DataFrame(matchResults);
+
+			let matchResultsDF = new DataFrame(newMatchResults);
 			let matchMapsWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getMatchMapsWinRate(mapStats, match)));
 			let matchHeadToHeadWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getHeadToHeadWinRate(match)));
-			let matchPlayoffsType = new DataFrame(matchDetails.map(match => hltvCrawler.getPlayoffType(match)));
-			let matchWin = new DataFrame(matchResults.map(match => hltvCrawler.getMatchWin(match)));
-			let matchEventTypes = new DataFrame(matchResults.map(match => hltvCrawler.getEventType(match)));
+			//map pick
+
+			// // let matchPlayoffsType = new DataFrame(matchDetails.map(match => hltvCrawler.getPlayoffType(match)));
+			// let matchWin = new DataFrame(matchResults.map(match => hltvCrawler.getMatchWin(match)));
+			// let matchEventTypes = new DataFrame(matchResults.map(match => hltvCrawler.getEventType(match)));
 
 			// Join DataFrames
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Joining dataframes of features"));
 			let matchInfo = matchResultsDF.merge(
 				matchMapsWinRate, ["id"], "inner").merge(
-					matchPlayoffsType, ["id"], "inner").merge(
-						matchWin, ["id"], "inner").merge(
-							matchEventTypes, ["id"], "inner").merge(
-								matchHeadToHeadWinRate, ["id"], "inner");
+					matchHeadToHeadWinRate, ["id"], "inner");
 
-			// Columns to keep in the final dataset
-			let columns = ["id", "team2", "format", "isPlayoffs", "isFinal", "eventName", "matchMapWinRate", "eventType", "headToHeadWinRate", "victory"];
+			// // Join DataFrames
+			// console.log(chalk.yellow("STEP: ") + chalk.blue("Joining dataframes of features"));
+			// let matchInfo = matchResultsDF.merge(
+			// 	matchMapsWinRate, ["id"], "inner").merge(
+			// 		matchPlayoffsType, ["id"], "inner").merge(
+			// 			matchWin, ["id"], "inner").merge(
+			// 				matchEventTypes, ["id"], "inner").merge(
+			// 					matchHeadToHeadWinRate, ["id"], "inner");
+
+			// // Columns to keep in the final dataset
+			// let columns = ["id", "team2", "format", "isPlayoffs", "isFinal", "eventName", "matchMapWinRate", "eventType", "headToHeadWinRate", "victory"];
+			let columns = ["id", "team1", "team2", "matchMapWinRate", "headToHeadWinRate", "map", "pick", "victory"];
 
 			// Generate final JSON Object
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Generating final JSON"));
 			let matchesObject = matchInfo.get(columns).to_json({ "orient": "records" });
 
-			// Generate final CSV
-			console.log(chalk.yellow("STEP: ") + chalk.blue("Generating final CSV"));
-			let csvFile = matchInfo.get(columns).to_csv();
+			// // Generate final CSV
+			// console.log(chalk.yellow("STEP: ") + chalk.blue("Generating final CSV"));
+			// let csvFile = matchInfo.get(columns).to_csv();
 
 			// Save final JSON Object to file
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Saving to JSON"));
 			await fileHelper.writeJson(matchesObject, `matches_${teamName}_${date}`);
 
-			// Save final CSV Object to file
-			console.log(chalk.yellow("STEP: ") + chalk.blue("Saving to CSV"));
-			await fileHelper.writeCsv(csvFile, `matches_${teamName}_${date}`);
+			// // Save final CSV Object to file
+			// console.log(chalk.yellow("STEP: ") + chalk.blue("Saving to CSV"));
+			// await fileHelper.writeCsv(csvFile, `matches_${teamName}_${date}`);
 
-			// Summary
-			console.log(chalk.blue("\n::::::::::::::: Summary ::::::::::::::\n"));
-			console.log(`${chalk.yellow("Matches Analyzed:")} ${chalk.blue(matchInfo.length)}`);
-			console.log(`${chalk.yellow("Matches with erros:")} ${chalk.blue(matchResults.length - matchInfo.length)}`);
-			console.log(chalk.blue("\n::::::::::::::::::::::::::::::::::::::\n"));
+			// // Summary
+			// console.log(chalk.blue("\n::::::::::::::: Summary ::::::::::::::\n"));
+			// console.log(`${chalk.yellow("Matches Analyzed:")} ${chalk.blue(matchInfo.length)}`);
+			// console.log(`${chalk.yellow("Matches with erros:")} ${chalk.blue(matchResults.length - matchInfo.length)}`);
+			// console.log(chalk.blue("\n::::::::::::::::::::::::::::::::::::::\n"));
 		} catch (e) {
 			console.log(e);
 		}
