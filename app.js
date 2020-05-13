@@ -38,7 +38,7 @@
 			console.log(chalk.green("INFO: ") + chalk.blue(`${matchResults.length} matches found\n`));
 
 			// Temp strategy to reduce result size
-			matchResults = matchResults.slice(0, 3);
+			// matchResults = matchResults.slice(0, 3);
 
 			// Transform Team Name to only keep names
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Transforming Team Name\n"));
@@ -116,9 +116,10 @@
 						bo1MatchResults.push({
 							"id": matchDetails[j].id,
 							"oposite_team": teams.oposite.name,
-							"victory": teams.selected.score >teams.oposite.score ? 1 : 0,
+							"victory": teams.selected.score > teams.oposite.score ? 1 : 0,
 							"map": matchMapDetail.map,
-							"pick": picked_map ? (picked_map.picker == teams.selected.name ? 1 : 0) : 2
+							"pick": picked_map ? (picked_map.picker == teams.selected.name ? 1 : 0) : 2,
+							"mapWinRate": mapStats[matchMapDetail.map].winRate
 						});
 					}
 				}
@@ -138,8 +139,8 @@
 			// @TODO: Improve MatchMaap Win Rate just for Bo1s
 
 			let matchResultsDF = new DataFrame(bo1MatchResults);
-			let matchMapsWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getMatchMapsWinRate(mapStats, match)));
-			let matchHeadToHeadWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getHeadToHeadWinRate(match)));
+			// let matchMapsWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getMatchMapsWinRate(mapStats, match)));
+			// let matchHeadToHeadWinRate = new DataFrame(matchDetails.map(match => hltvCrawler.getHeadToHeadWinRate(match)));
 			//map pick
 
 			// // let matchPlayoffsType = new DataFrame(matchDetails.map(match => hltvCrawler.getPlayoffType(match)));
@@ -147,10 +148,10 @@
 			// let matchEventTypes = new DataFrame(matchResults.map(match => hltvCrawler.getEventType(match)));
 
 			// Join DataFrames
-			console.log(chalk.yellow("STEP: ") + chalk.blue("Joining dataframes of features"));
-			let matchInfo = matchResultsDF.merge(
-				matchMapsWinRate, ["id"], "inner").merge(
-					matchHeadToHeadWinRate, ["id"], "inner");
+			// console.log(chalk.yellow("STEP: ") + chalk.blue("Joining dataframes of features"));
+			// let matchInfo = matchResultsDF.merge(
+			// 	matchMapsWinRate, ["id"], "inner").merge(
+			// 		matchHeadToHeadWinRate, ["id"], "inner");
 
 			// // Join DataFrames
 			// console.log(chalk.yellow("STEP: ") + chalk.blue("Joining dataframes of features"));
@@ -163,11 +164,11 @@
 
 			// // Columns to keep in the final dataset
 			// let columns = ["id", "team2", "format", "isPlayoffs", "isFinal", "eventName", "matchMapWinRate", "eventType", "headToHeadWinRate", "victory"];
-			let columns = ["id", "oposite_team", "matchMapWinRate", "headToHeadWinRate", "map", "pick", "victory"];
+			let columns = ["id", "oposite_team", "map", "pick", "mapWinRate", "victory"];
 
 			// Generate final JSON Object
 			console.log(chalk.yellow("STEP: ") + chalk.blue("Generating final JSON"));
-			let matchesObject = matchInfo.get(columns).to_json({ "orient": "records" });
+			let matchesObject = matchResultsDF.get(columns).to_json({ "orient": "records" });
 
 			// // Generate final CSV
 			// console.log(chalk.yellow("STEP: ") + chalk.blue("Generating final CSV"));
