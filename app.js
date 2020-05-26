@@ -17,6 +17,9 @@
 		"hltvPages": pages
 	});
 
+	// @TODO - 05/26/2020 - In case of any issues, 
+	// write the contents into file and mark the saved matches to skip them in the next run
+
 	(async () => {
 		let teamName = await hltvCrawler.getTeamName();
 
