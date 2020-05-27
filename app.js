@@ -52,19 +52,23 @@
 			let matchDetails = [];
 			let picks = [];
 			for (let i in matchResults) {
-				let matchDetail = await hltvCrawler.getMatchDetails(matchResults[i].id);
-				matchDetails.push(matchDetail);
+				try {
+					let matchDetail = await hltvCrawler.getMatchDetails(matchResults[i].id);
+					matchDetails.push(matchDetail);
 
-				// decode vetoes
-				await (function () {
-					let all_picked = matchDetail.vetoes.filter(pick => pick.type == "picked");
-					picks = all_picked.map(veto => {
-						return {
-							"map": veto.map,
-							"picker": veto.team.name
-						}
-					})
-				}())
+					// decode vetoes
+					// await (function () {
+					// 	let all_picked = matchDetail.vetoes.filter(pick => pick.type == "picked");
+					// 	picks = all_picked.map(veto => {
+					// 		return {
+					// 			"map": veto.map,
+					// 			"picker": veto.team.name
+					// 		}
+					// 	})
+					// }())
+				} catch (e) {
+					console.log(chalk.yellow("STEP: ") + chalk.blue("Stop getMatchDetails due to an error\n"));
+				}
 			}
 
 
@@ -114,14 +118,14 @@
 						console.log(chalk.yellow("Match Map: ") + chalk.blue(matchMapDetail.map));
 
 						let teams = getSelectedAndOpositeTeam(matchMapDetail, teamName);
-						let picked_map = picks.find(pick => pick.map == matchMapDetail.map)
+						// let picked_map = picks.find(pick => pick.map == matchMapDetail.map)
 
 						bo1MatchResults.push({
 							"id": matchDetails[j].id,
 							"oposite_team": teams.oposite.name,
 							"victory": teams.selected.score > teams.oposite.score ? 1 : 0,
 							"map": matchMapDetail.map,
-							"pick": picked_map ? (picked_map.picker == teams.selected.name ? 1 : 0) : 2,
+							// "pick": picked_map ? (picked_map.picker == teams.selected.name ? "Yes" : "No") : "Decider",
 							"mapWinRate": mapStats[matchMapDetail.map].winRate
 						});
 					}
