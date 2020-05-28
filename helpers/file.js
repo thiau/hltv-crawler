@@ -5,7 +5,18 @@
 
 	module.exports = function () {
 		return {
-			"writeJson": function (data, fileName) {
+			"loadFile": function (path) {
+				return new Promise((resolve, reject) => {
+					fs.readFile(path, 'utf8', function(err, data) {
+						if (err) {
+							reject(err);
+						} else {
+							resolve(data);
+						}
+					});
+				});
+			},
+			"saveJson": function (data, fileName) {
 				return new Promise((resolve, reject) => {
 					let dataStringfied = JSON.stringify(data);
 
@@ -22,7 +33,7 @@
 					});
 				});
 			},
-			"writeCsv": function (data, fileName) {
+			"saveCsv": function (data, fileName) {
 				return new Promise((resolve, reject) => {
 					if (!fs.existsSync("./datasets/")) {
 						fs.mkdirSync("./datasets/")
