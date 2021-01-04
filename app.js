@@ -6,12 +6,15 @@
 
 	// Crawl data
 
-	HLTV.getMatchesStats({ startDate: '2020-01-01', endDate: '2020-12-11' }).then((res) => {
-		fileHelper.saveJson(res, "matches_2020").then(data => {
-			console.log("saved")
+	console.log("Crawling Data...")
+	HLTV.getMatchesStats({ startDate: '2020-01-01', endDate: '2020-12-31' }).then((res) => {
+		console.log(`\nTotal matches found: ${res.length}`)
+		let date = new Date().getTime();
+		let fileName = `matches_${date}`;
+		fileHelper.saveJson(res, fileName).then(data => {
+			console.log("\nFile saved")
 		}).catch(err => {
 			console.log(err);
 		})
 	})
-
 }())
