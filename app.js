@@ -1,20 +1,24 @@
 (function () {
 	"use strict";
 
-	let fileHelper = require("./helpers/file")();
-	const { HLTV } = require('hltv');
-
-	// Crawl data
+	let hltvCrawler = require("./helpers/crawler")();
+	let fileHelper = require("./helpers/file")()
 
 	console.log("Crawling Data...")
-	HLTV.getMatchesStats({ startDate: '2020-01-01', endDate: '2020-12-31' }).then((res) => {
-		console.log(`\nTotal matches found: ${res.length}`)
-		let date = new Date().getTime();
-		let fileName = `matches_${date}`;
-		fileHelper.saveJson(res, fileName).then(data => {
-			console.log("\nFile saved")
+
+	hltvCrawler.getMatchData('2020-12-15', '2020-12-31').then(matchData => {
+		console.log(`Total Matches Found: ${matchData.count}`)
+		console.log("Saving the file...")
+
+        let fileName = `matches_${new Date().getTime()}`;
+		fileHelper.saveJson(matchData, fileName).then(data => {
+			console.log("All Done!")
 		}).catch(err => {
-			console.log(err);
+			console.log("Error on saving the file!")
+			console.log(err)
 		})
+	}).catch(err => {
+		console.log(err);
 	})
+
 }())
