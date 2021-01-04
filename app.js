@@ -5,10 +5,14 @@
 	let hltvCrawler = require("./helpers/crawler")();
 	let fileHelper = require("./helpers/file")()
 
+	// Define time variables
+	let startDate = '2020-12-15'
+	let endDate = '2020-12-31'
+
 	console.log("Crawling Data...")
 
 	// Crawl HTLV Matches
-	hltvCrawler.getMatchData('2020-12-15', '2020-12-31').then(matchData => {
+	hltvCrawler.getMatchData(startDate, endDate).then(matchData => {
 		console.log(`Total Matches Found: ${matchData.count}`)
 		console.log("Saving the file...")
 
