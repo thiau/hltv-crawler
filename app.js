@@ -3,29 +3,37 @@
 
 	// Import Helpers
 	let hltvCrawler = require("./helpers/crawler")();
-	let fileHelper = require("./helpers/file")()
+	let fileHelper = require("./helpers/file")();
+	const chalk = require('chalk');
+
+	// Define auxiliar variables
+	const log = console.log;
+	const green = chalk.green;
+	const red = chalk.red;
+	const cyan = chalk.cyan;
 
 	// Define time variables
-	let startDate = '2020-12-15'
-	let endDate = '2020-12-31'
+	let startDate = '2020-12-15';
+	let endDate = '2020-12-31';
 
-	console.log("Crawling Data...")
+	log(green("\n:: Starting HLTV Crawler ::"))
+	log(cyan("\nCrawling Data..."));
 
 	// Crawl HTLV Matches
 	hltvCrawler.getMatchData(startDate, endDate).then(matchData => {
-		console.log(`Total Matches Found: ${matchData.count}`)
-		console.log("Saving the file...")
+		log(`${cyan("Total Matches Found:")} ${green(matchData.count)}`);
+		log(cyan("Saving the file..."));
 
 		// Save the file for future use
         let fileName = `matches_${new Date().getTime()}`;
 		fileHelper.saveJson(matchData, fileName).then(data => {
-			console.log("All Done!")
+			log(green("\nFinished!\n"));
 		}).catch(err => {
-			console.log("Error on saving the file!")
-			console.log(err)
+			log(red("Error on saving the file!"));
+			log(err);
 		})
 	}).catch(err => {
-		console.log(err);
+		log(err);
 	})
 
 }())
