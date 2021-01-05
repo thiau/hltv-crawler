@@ -6,9 +6,7 @@
   "dependencies": {
     "babel-runtime": "^6.26.0",
     "chalk": "^3.0.0",
-    "hltv": "^2.17.2",
-    "moment": "^2.24.0",
-    "pandas-js": "^0.2.4"
+    "hltv": "^2.17.2"
   },
   "devDependencies": {},
   "scripts": {
